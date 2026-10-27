@@ -1,0 +1,134 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+
+struct NODE
+{
+    int data;
+    struct NODE *link;
+};
+
+typedef struct NODE *node;
+
+node createHeadernode()
+{
+    node header = (node)malloc(sizeof(struct NODE));
+
+    if (header == NULL)
+    {
+        printf("Memory allocation failed\n");
+        exit(1);
+    }
+
+    header->link = header;
+    return header;
+}
+
+void insertRear(node head, int data)
+{
+    node new_node = (node)malloc(sizeof(struct NODE));
+
+    if (new_node == NULL)
+    {
+        printf("Memory allocation failed\n");
+        exit(1);
+    }
+
+    new_node->data = data;
+
+    node current = head;
+
+    while (current->link != head)
+    {
+        current = current->link;
+    }
+
+    current->link = new_node;
+    new_node->link = head;
+}
+
+node addLongInteger(node head1, node head2)
+{
+    node result = createHeadernode();
+
+    node current1 = head1->link;
+    node current2 = head2->link;
+
+    int carry = 0;
+
+    while (current1 != head1 || current2 != head2 || carry != 0)
+    {
+        int sum = carry;
+
+        if (current1 != head1)
+        {
+            sum += current1->data;
+            current1 = current1->link;
+        }
+
+        if (current2 != head2)
+        {
+            sum += current2->data;
+            current2 = current2->link;
+        }
+
+        carry = sum / 10;
+
+        insertRear(result, sum % 10);
+    }
+
+    return result;
+}
+
+void printList(node head)
+{
+    if (head->link == head)
+    {
+        printf("List is empty\n");
+        return;
+    }
+
+    node current = head->link;
+
+    while (current != head)
+    {
+        printf("%d", current->data);
+        current = current->link;
+    }
+
+    printf("\n");
+}
+
+int main()
+{
+    node head1 = createHeadernode();
+    node head2 = createHeadernode();
+
+    int size1, size2, digit;
+
+    printf("Enter the number of digits in both integers:\n");
+    scanf("%d %d", &size1, &size2);
+
+    printf("Enter the first integer digits from right to left:\n");
+
+    for (int i = 0; i < size1; i++)
+    {
+        scanf("%d", &digit);
+        insertRear(head1, digit);
+    }
+
+    printf("Enter the second integer digits from right to left:\n");
+
+    for (int i = 0; i < size2; i++)
+    {
+        scanf("%d", &digit);
+        insertRear(head2, digit);
+    }
+
+    node result = addLongInteger(head1, head2);
+
+    printf("Result of addition:\n");
+    printList(result);
+
+    return 0;
+}
