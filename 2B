@@ -1,106 +1,107 @@
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#define MAXSIZE 3
-#define MAXLEN 100
+#define MAXSIZE 100
 
-char q[MAXSIZE][MAXLEN];
-int front = -1, rear = -1;
+char queue[MAXSIZE][MAXSIZE];
+int front = -1;
+int rear = -1;
 
-void insert()
-{
-    if ((rear + 1) % MAXSIZE == front)
-    {
-        printf("\nQueue is full. Cannot add more messages.\n");
+// Insert a message into the circular queue
+void insert(void) {
+    char message[MAXSIZE];
+
+    if ((rear + 1) % MAXSIZE == front) {
+        printf("Queue is full!\n");
+        return;
     }
-    else
-    {
-        printf("\nEnter the message to be added: ");
-        getchar();
 
-        rear = (rear + 1) % MAXSIZE;
+    printf("Enter the message to be added: ");
+    getchar();
 
-        fgets(q[rear], MAXLEN, stdin);
-        q[rear][strcspn(q[rear], "\n")] = '\0';
+    if (fgets(message, MAXSIZE, stdin) == NULL) {
+        printf("Input error!\n");
+        return;
+    }
 
-        if (front == -1)
-        {
-            front = 0;
-        }
+    message[strcspn(message, "\n")] = '\0';
 
-        printf("\nMessage '%s' sent successfully.\n", q[rear]);
+    if (front == -1) {
+        front = 0;
+    }
+
+    rear = (rear + 1) % MAXSIZE;
+    strcpy(queue[rear], message);
+
+    printf("Message inserted successfully.\n");
+}
+
+// Delete a message from the circular queue
+void deleteMessage(void) {
+    if (front == -1) {
+        printf("Queue is empty!\n");
+        return;
+    }
+
+    printf("Deleted message: %s\n", queue[front]);
+
+    if (front == rear) {
+        front = rear = -1;
+    } else {
+        front = (front + 1) % MAXSIZE;
     }
 }
 
-void delete()
-{
-    if (front == -1)
-    {
-        printf("\nQueue is empty. Cannot delete any messages.\n");
-    }
-    else
-    {
-        printf("\nMessage '%s' received\n", q[front]);
+// Display all messages in the circular queue
+void display(void) {
+    int i;
 
-        if (front == rear)
-        {
-            front = -1;
-            rear = -1;
+    if (front == -1) {
+        printf("Queue is empty!\n");
+        return;
+    }
+
+    printf("Messages in the queue:\n");
+
+    i = front;
+
+    while (1) {
+        printf("%s\n", queue[i]);
+
+        if (i == rear) {
+            break;
         }
-        else
-        {
-            front = (front + 1) % MAXSIZE;
-        }
+
+        i = (i + 1) % MAXSIZE;
     }
 }
 
-void display()
-{
-    if (front == -1)
-    {
-        printf("\nQueue is empty\n");
-    }
-    else
-    {
-        printf("\nQueue status (messages):\n");
+// Main function
+int main(void) {
+    int choice;
 
-        int i = front;
-
-        while (1)
-        {
-            printf("%s\n", q[i]);
-
-            if (i == rear)
-                break;
-
-            i = (i + 1) % MAXSIZE;
-        }
-    }
-}
-
-int main()
-{
-    int ch;
-
-    while (1)
-    {
-        printf("\n1. Send Message\n");
-        printf("2. Receive Message\n");
-        printf("3. Display Messages\n");
+    while (1) {
+        printf("\n--- Circular Queue Menu ---\n");
+        printf("1. Insert message\n");
+        printf("2. Delete message\n");
+        printf("3. Display messages\n");
         printf("4. Exit\n");
+        printf("Enter your choice: ");
 
-        printf("\nEnter your choice: ");
-        scanf("%d", &ch);
+        if (scanf("%d", &choice) != 1) {
+            printf("Invalid input!\n");
+            break;
+        }
 
-        switch (ch)
-        {
+        switch (choice) {
             case 1:
                 insert();
                 break;
 
             case 2:
-                delete();
+                deleteMessage();
                 break;
 
             case 3:
@@ -108,10 +109,13 @@ int main()
                 break;
 
             case 4:
+                printf("Exiting program.\n");
                 return 0;
 
             default:
-                printf("\nInvalid choice\n");
+                printf("Invalid choice! Enter 1-4.\n");
         }
     }
+
+    return 0;
 }
