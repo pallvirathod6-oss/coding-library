@@ -2,191 +2,151 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-struct NODE
-{
+struct Node {
     int data;
-    struct NODE *link;
+    struct Node *next;
 };
 
-typedef struct NODE *node;
+typedef struct Node* node;
 
 node head = NULL;
 
-void Finsert()
-{
-    int x;
+// Insert a node at a given position
+void insertAtPosition(int value, int pos) {
+    node newNode = (node)malloc(sizeof(struct Node));
 
-    node new_node = (node)malloc(sizeof(struct NODE));
-
-    if (new_node == NULL)
-    {
-        printf("Overflow\n");
+    if (newNode == NULL) {
+        printf("Memory allocation failed!\n");
         return;
     }
 
-    printf("Enter an element\n");
-    scanf("%d", &x);
+    newNode->data = value;
+    newNode->next = NULL;
 
-    new_node->data = x;
-    new_node->link = head;
-    head = new_node;
+    // Insert at the beginning
+    if (pos == 1) {
+        newNode->next = head;
+        head = newNode;
+        printf("Node inserted successfully.\n");
+        return;
+    }
 
-    printf("Node inserted at the front\n");
+    node temp = head;
+
+    // Move to the node before the required position
+    for (int i = 1; i < pos - 1 && temp != NULL; i++) {
+        temp = temp->next;
+    }
+
+    if (temp == NULL) {
+        printf("Invalid position!\n");
+        free(newNode);
+        return;
+    }
+
+    newNode->next = temp->next;
+    temp->next = newNode;
+
+    printf("Node inserted successfully.\n");
 }
 
-void Fdelete()
-{
-    if (head == NULL)
-    {
-        printf("List is empty\n");
+// Delete a node from the beginning
+void deleteAtBeginning(void) {
+    if (head == NULL) {
+        printf("List is empty. Nothing to delete.\n");
         return;
     }
 
-    node current = head;
-    head = head->link;
-    free(current);
+    node temp = head;
+    head = head->next;
 
-    printf("Node deleted at the front\n");
+    printf("Deleted element: %d\n", temp->data);
+    free(temp);
 }
 
-void Linsert()
-{
-    int x;
+// Display the linked list
+void display(void) {
+    node temp = head;
 
-    printf("Enter an element\n");
-    scanf("%d", &x);
-
-    node new_node = (node)malloc(sizeof(struct NODE));
-
-    if (new_node == NULL)
-    {
-        printf("Overflow\n");
+    if (head == NULL) {
+        printf("List is empty.\n");
         return;
     }
 
-    new_node->data = x;
-    new_node->link = NULL;
+    printf("Linked list: ");
 
-    if (head == NULL)
-    {
-        head = new_node;
-        printf("Node inserted at the rear\n");
-        return;
-    }
-
-    node current = head;
-
-    while (current->link != NULL)
-    {
-        current = current->link;
-    }
-
-    current->link = new_node;
-
-    printf("Node inserted at the rear\n");
-}
-
-void Ldelete()
-{
-    if (head == NULL)
-    {
-        printf("List is empty\n");
-        return;
-    }
-
-    if (head->link == NULL)
-    {
-        free(head);
-        head = NULL;
-        printf("Node deleted at the rear\n");
-        return;
-    }
-
-    node current = head;
-
-    while (current->link->link != NULL)
-    {
-        current = current->link;
-    }
-
-    free(current->link);
-    current->link = NULL;
-
-    printf("Node deleted at the rear\n");
-}
-
-void display()
-{
-    if (head == NULL)
-    {
-        printf("List is empty\n");
-        return;
-    }
-
-    node current = head;
-
-    printf("Linked list is:\n");
-
-    while (current != NULL)
-    {
-        printf("%d --> ", current->data);
-        current = current->link;
+    while (temp != NULL) {
+        printf("%d -> ", temp->data);
+        temp = temp->next;
     }
 
     printf("NULL\n");
 }
 
-int main()
-{
-    int ch;
+// Main function
+int main(void) {
+    int choice, value, pos;
 
-    for (;;)
-    {
-        printf("\nEnter an operation\n");
-        printf("1. Insert at front\n");
-        printf("2. Delete at front\n");
-        printf("3. Insert at rear\n");
-        printf("4. Delete at rear\n");
-        printf("5. Display\n");
-        printf("6. Exit\n");
+    while (1) {
+        printf("\n--- Singly Linked List Menu ---\n");
+        printf("1. Insert at a position\n");
+        printf("2. Delete at beginning\n");
+        printf("3. Display\n");
+        printf("4. Exit\n");
+        printf("Enter your choice: ");
 
-        scanf("%d", &ch);
+        if (scanf("%d", &choice) != 1) {
+            printf("Invalid input!\n");
+            break;
+        }
 
-        switch (ch)
-        {
+        switch (choice) {
             case 1:
-                Finsert();
-                break;
+                printf("Enter the value to insert: ");
+                if (scanf("%d", &value) != 1) {
+                    printf("Invalid input!\n");
+                    goto cleanup;
+                }
 
-            case 2:
-                Fdelete();
-                break;
+                printf("Enter the position (1 = beginning): ");
+                if (scanf("%d", &pos) != 1) {
+                    printf("Invalid input!\n");
+                    goto cleanup;
+                }
 
-            case 3:
-                Linsert();
-                break;
+                if (pos < 1) {
+                    printf("Position must be at least 1.\n");
+                    break;
+                }
 
-            case 4:
-                Ldelete();
-                break;
-
-            case 5:
+                insertAtPosition(value, pos);
                 display();
                 break;
 
-            case 6:
-                while (head != NULL)
-                {
-                    node current = head;
-                    head = head->link;
-                    free(current);
-                }
-                return 0;
+            case 2:
+                deleteAtBeginning();
+                display();
+                break;
+
+            case 3:
+                display();
+                break;
+
+            case 4:
+                exit(0);
 
             default:
-                printf("Invalid choice\n");
+                printf("Invalid choice! Please enter 1-4.\n");
         }
     }
 
+cleanup:
+    while (head != NULL) {
+        node temp = head;
+        head = head->next;
+        free(temp);
+    }
+
+    printf("Program terminated.\n");
     return 0;
 }
