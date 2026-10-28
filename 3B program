@@ -1,134 +1,183 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 
-struct NODE
-{
+struct Node {
     int data;
-    struct NODE *link;
+    struct Node *prev;
+    struct Node *next;
 };
 
-typedef struct NODE *node;
+typedef struct Node Node;
 
-node createHeadernode()
-{
-    node header = (node)malloc(sizeof(struct NODE));
+// Create a new node
+Node *createNode(int digit) {
+    Node *newNode = malloc(sizeof(Node));
 
-    if (header == NULL)
-    {
-        printf("Memory allocation failed\n");
-        exit(1);
+    if (newNode == NULL) {
+        printf("Memory allocation failed!\n");
+        exit(EXIT_FAILURE);
     }
 
-    header->link = header;
-    return header;
+    newNode->data = digit;
+    newNode->prev = NULL;
+    newNode->next = NULL;
+
+    return newNode;
 }
 
-void insertRear(node head, int data)
-{
-    node new_node = (node)malloc(sizeof(struct NODE));
+// Insert a digit at the end
+void insertEnd(Node **head, Node **tail, int digit) {
+    Node *newNode = createNode(digit);
 
-    if (new_node == NULL)
-    {
-        printf("Memory allocation failed\n");
-        exit(1);
+    if (*head == NULL) {
+        *head = *tail = newNode;
+    } else {
+        (*tail)->next = newNode;
+        newNode->prev = *tail;
+        *tail = newNode;
     }
-
-    new_node->data = data;
-
-    node current = head;
-
-    while (current->link != head)
-    {
-        current = current->link;
-    }
-
-    current->link = new_node;
-    new_node->link = head;
 }
 
-node addLongInteger(node head1, node head2)
-{
-    node result = createHeadernode();
+// Insert a digit at the beginning
+void insertFront(Node **head, Node **tail, int digit) {
+    Node *newNode = createNode(digit);
 
-    node current1 = head1->link;
-    node current2 = head2->link;
-
-    int carry = 0;
-
-    while (current1 != head1 || current2 != head2 || carry != 0)
-    {
-        int sum = carry;
-
-        if (current1 != head1)
-        {
-            sum += current1->data;
-            current1 = current1->link;
-        }
-
-        if (current2 != head2)
-        {
-            sum += current2->data;
-            current2 = current2->link;
-        }
-
-        carry = sum / 10;
-
-        insertRear(result, sum % 10);
+    if (*head == NULL) {
+        *head = *tail = newNode;
+    } else {
+        newNode->next = *head;
+        (*head)->prev = newNode;
+        *head = newNode;
     }
-
-    return result;
 }
 
-void printList(node head)
-{
-    if (head->link == head)
-    {
-        printf("List is empty\n");
+// Convert a number string into a doubly linked list
+void createList(char str[], Node **head, Node **tail) {
+    for (int i = 0; str[i] != '\0'; i++) {
+        insertEnd(head, tail, str[i] - '0');
+    }
+}
+
+// Display a number
+void display(Node *head) {
+    if (head == NULL) {
+        printf("0");
         return;
     }
 
-    node current = head->link;
-
-    while (current != head)
-    {
-        printf("%d", current->data);
-        current = current->link;
+    while (head != NULL) {
+        printf("%d", head->data);
+        head = head->next;
     }
 
     printf("\n");
 }
 
-int main()
-{
-    node head1 = createHeadernode();
-    node head2 = createHeadernode();
+// Count the number of digits
+int getLength(Node *head) {
+    int length = 0;
 
-    int size1, size2, digit;
-
-    printf("Enter the number of digits in both integers:\n");
-    scanf("%d %d", &size1, &size2);
-
-    printf("Enter the first integer digits from right to left:\n");
-
-    for (int i = 0; i < size1; i++)
-    {
-        scanf("%d", &digit);
-        insertRear(head1, digit);
+    while (head != NULL) {
+        length++;
+        head = head->next;
     }
 
-    printf("Enter the second integer digits from right to left:\n");
+    return length;
+}
 
-    for (int i = 0; i < size2; i++)
-    {
-        scanf("%d", &digit);
-        insertRear(head2, digit);
+// Add two large integers
+Node *addNumbers(Node *head1, Node *tail1,
+                 Node *head2, Node *tail2) {
+    Node *resultHead = NULL;
+    Node *resultTail = NULL;
+
+    int carry = 0;
+
+    while (tail1 != NULL || tail2 != NULL || carry != 0) {
+        int sum = carry;
+
+        if (tail1 != NULL) {
+            sum += tail1->data;
+            tail1 = tail1->prev;
+        }
+
+        if (tail2 != NULL) {
+            sum += tail2->data;
+            tail2 = tail2->prev;
+        }
+
+        carry = sum / 10;
+        int digit = sum % 10;
+
+        insertFront(&resultHead, &resultTail, digit);
     }
 
-    node result = addLongInteger(head1, head2);
+    return resultHead;
+}
 
-    printf("Result of addition:\n");
-    printList(result);
+// Free the linked list
+void freeList(Node *head) {
+    while (head != NULL) {
+        Node *temp = head;
+        head = head->next;
+        free(temp);
+    }
+}
+
+// Validate a positive integer string
+int isValidNumber(char str[]) {
+    if (str[0] == '\0') {
+        return 0;
+    }
+
+    for (int i = 0; str[i] != '\0'; i++) {
+        if (!isdigit((unsigned char)str[i])) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+int main(void) {
+    char num1[1000], num2[1000];
+
+    Node *head1 = NULL, *tail1 = NULL;
+    Node *head2 = NULL, *tail2 = NULL;
+    Node *resultHead = NULL;
+
+    printf("Enter first positive integer: ");
+    if (scanf("%999s", num1) != 1 || !isValidNumber(num1)) {
+        printf("Invalid first integer.\n");
+        return 1;
+    }
+
+    printf("Enter second positive integer: ");
+    if (scanf("%999s", num2) != 1 || !isValidNumber(num2)) {
+        printf("Invalid second integer.\n");
+        return 1;
+    }
+
+    createList(num1, &head1, &tail1);
+    createList(num2, &head2, &tail2);
+
+    printf("\nFirst number: ");
+    display(head1);
+
+    printf("Second number: ");
+    display(head2);
+
+    resultHead = addNumbers(head1, tail1, head2, tail2);
+
+    printf("Sum: ");
+    display(resultHead);
+
+    freeList(head1);
+    freeList(head2);
+    freeList(resultHead);
 
     return 0;
 }
